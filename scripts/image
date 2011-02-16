@@ -94,6 +94,9 @@ mkdir -p $INSTALL
 # Network support
   [ "$NETWORK" = "yes" ] && $SCRIPTS/install network
 
+# Mt-daapd support
+  [ "$MTDAAPDSERVER" = "yes" ] && $SCRIPTS/install mt-daapd
+
 # Transmission BitTorrent support
   [ "$TRANSMISSION" = "yes" ] && $SCRIPTS/install transmission
 

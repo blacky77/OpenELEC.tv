@@ -23,4 +23,5 @@
     <setting id="TVHEADEND_START" value="false" />
     <setting id="UPDATE_AUTO" value="manually" />
     <setting id="X11_KEYMAP" value="us" />
+    <setting id="FIREFLY_START" value="true" />
 </settings>

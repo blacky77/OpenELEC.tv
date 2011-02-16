@@ -1,14 +1,10 @@
 <?xml version="1.0" encoding="utf-8" standalone="yes"?>
 <strings>
 
-	<!-- System -->
-	<string id="2000">System</string>
-	<string id="2010">Keyboard</string>
-	<string id="2011">Keyboardlayout</string>
-	<string id="2020">System Update</string>
-	<string id="2021">Auto update</string>
-	<string id="2050">LCD/VFD</string>
-	<string id="2051">LCD Driver to use</string>
+	<!-- General -->
+	<string id="2000">Update</string>
+	<string id="2010">Update</string>
+	<string id="2011">Auto update</string>
 
 	<!-- Network -->
 	<string id="2100">Network</string>
@@ -26,9 +22,13 @@
 	<string id="2136">DNS server 3</string>
 	<string id="2150">WLAN settings</string>
 	<string id="2151">WLAN SSID</string>
-	<string id="2152">Hidden Network</string>
-	<string id="2153">WLAN Security</string>
-	<string id="2154">WLAN Passphrase</string>
+	<string id="2152">WLAN Security</string>
+	<string id="2153">WLAN Passphrase</string>
+
+	<!-- LCD -->
+	<string id="3100">LCD/VFD</string>
+	<string id="3110">Driver</string>
+	<string id="3111">LCD Driver to use</string>
 
 	<!-- TV_SERVER -->
 	<string id="4100">TV/PVR</string>
@@ -56,4 +56,20 @@
 	<string id="5210">Boot</string>
 	<string id="5211">Start SABnzbd at boot</string>
 
+	<!-- Firefly -->
+	<string id="5300">Firefly</string>
+	<string id="5310">Boot</string>
+	<string id="5311">Start Firefly at boot</string>
+        <string id="5320">Port</string>
+	<string id="5321">Administrator Password</string>
+	<string id="5322">Music Directory</string>
+	<string id="5323">Server Name</string>
+	<string id="5324">Password</string>
+	<string id="5325">Rescan Interval (0=none)</string>
 </strings>
+
+
+
+
+
+

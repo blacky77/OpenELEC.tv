@@ -78,6 +78,10 @@
 # (DVD decryption support in XBMC) (yes / no)
   DVDCSS_SUPPORT="yes"
 
+# build and install with FAAC support in XBMC
+# FAAC is an MPEG-4 and MPEG-2 AAC encoder (yes / no)
+  FAAC_SUPPORT="yes"
+
 # build and install Tvheadend TV server (yes / no)
   TVHEADEND="yes"
 
@@ -108,6 +112,9 @@
 
 # build and install SABnzbd Newsgroup downloader daemon (yes / no)
   SABNZBD="yes"
+
+# build and install firefly (mt-daapd) itunes server (yes / no)
+  MTDAAPD_SERVER="yes"
 
 # build and install SickBeard Newsgroup downloader daemon (yes / no)
   SICKBEARD="yes"
@@ -151,7 +158,7 @@
   VDPAU="yes"
 
 # Use VAAPI video acceleration (needs intel i965 driver and a supported card)
-  VAAPI="yes"
+  VAAPI="no"
 
 # Use Broadcom CrystalHD Decoder Card for video acceleration 
 # (needs Kernelsupport for Broadcom Decoder Card and a supported card)
@@ -181,13 +188,11 @@
 # "none" for disable LCD support
   LCD_DRIVER="irtrans,imon"
 
-# build internal (in Kernel) or external Firmware (internal / external)"
-  FIRMWARE="external"
-
-# additional Firmware to use (dvb-firmware, b43, ipw2100, ipw2200, zd1211)
+# Firmware to use (iwl1000, iwl3945, iwl4965, iwl5000, iwl5150, iwl6000, iwl6050,
+# dvb-firmware)
 # Space separated list is supported,
-# e.g. FIRMWARE="dvb-firmware b43"
-  ADDITIONAL_FIRMWARE="b43 ipw2100 ipw2200 dvb-firmware zd1211"
+# e.g. FIRMWARE="iwl3945 iwl5000"
+  FIRMWARE="ipw2100 ipw2200 iwl1000 iwl3945 iwl4965 iwl5000 iwl5150 iwl6000 iwl6050 dvb-firmware"
 
 # build with lm_sensors hardware monitoring support (yes / no)
   SENSOR_SUPPORT="yes"

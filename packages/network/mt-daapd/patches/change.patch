@@ -1,0 +1,21 @@
+--- mt-daapd/src/main.c	2008-04-19 21:17:23.000000000 +0200
++++ test_neu/main.c	2011-02-09 08:55:34.309241001 +0100
+@@ -79,6 +79,7 @@
+ #include "webserver.h"
+ #include "playlist.h"
+ #include "dynamic-art.h"
++#include "xbmc_binding.h"
+ 
+ #ifndef WITHOUT_MDNS
+ #include "rend.h"
+@@ -401,7 +402,7 @@ void daap_handler(WS_CONNINFO *pwsc) {
+ 
+                 /* Re-adjust content length for cover art */
+                 if((config.artfilename) &&
+-                   ((img_fd=da_get_image_fd(pmp3->path)) != -1)) {
++                   ((img_fd=get_xbmc_image_fd(pmp3->path)) != -1)) {
+                   fstat(img_fd, &sb);
+                   img_size = sb.st_size;
+
+ 
+

@@ -1,0 +1,56 @@
+################################################################################
+#      Copyright (C) 2009-2010 OpenELEC.tv
+#      http://www.openelec.tv
+#
+#  This Program is free software; you can redistribute it and/or modify
+#  it under the terms of the GNU General Public License as published by
+#  the Free Software Foundation; either version 2, or (at your option)
+#  any later version.
+#
+#  This Program is distributed in the hope that it will be useful,
+#  but WITHOUT ANY WARRANTY; without even the implied warranty of
+#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+#  GNU General Public License for more details.
+#
+#  You should have received a copy of the GNU General Public License
+#  along with OpenELEC.tv; see the file COPYING.  If not, write to
+#  the Free Software Foundation, 675 Mass Ave, Cambridge, MA 02139, USA.
+#  http://www.gnu.org/copyleft/gpl.html
+################################################################################
+
+# start mt-daap itunes server
+#
+# runlevels: openelec, textmode
+
+OPENELEC_SETTINGS="$HOME/.xbmc/userdata/addon_data/os.openelec.settings/settings.xml"
+
+(
+  if [ -f "$OPENELEC_SETTINGS" ]; then
+    FIREFLY_START=`grep FIREFLY_START $OPENELEC_SETTINGS | awk '{print $3 }' | sed -e "s,value=,," -e "s,\",,g"`
+    FIREFLY_PORT=`grep FIREFLY_PORT $OPENELEC_SETTINGS | awk '{print $3 }' | sed -e "s,value=,," -e "s,\",,g"`
+    FIREFLY_ADMIN_PW=`grep FIREFLY_ADMIN_PW $OPENELEC_SETTINGS | awk '{print $3 }' | sed -e "s,value=,," -e "s,\",,g"`
+    FIREFLY_MP3_DIR=`grep FIREFLY_MP3_DIR $OPENELEC_SETTINGS | awk '{print $3 }' | sed -e "s,value=,," -e "s,\",,g"`
+    FIREFLY_SERVERNAME=`grep FIREFLY_SERVERNAME $OPENELEC_SETTINGS | awk '{print $3 }' | sed -e "s,value=,," -e "s,\",,g"`
+    FIREFLY_PASSWORD=`grep FIREFLY_PASSWORD $OPENELEC_SETTINGS | awk '{print $3 }' | sed -e "s,value=,," -e "s,\",,g"`
+    FIREFLY_RESCAN_INTERVAL=`grep FIREFLY_RESCAN_INTERVAL $OPENELEC_SETTINGS | awk '{print $3 }' | sed -e "s,value=,," -e "s,\",,g"`
+		
+    if [ "$FIREFLY_START" = "true" ]; then
+
+      	wait_for_network
+      	
+	#create temporary config file
+	cp /etc/mt-daapd/mt-daapd.conf /var/mt-daapd.conf
+
+    	#prep config file
+      	sed -e "/^port/ c\port	$FIREFLY_PORT" -i /var/mt-daapd.conf
+	sed -e "/^admin_pw/ c\admin_pw	$FIREFLY_ADMIN_PW" -i /var/mt-daapd.conf
+      	sed -e "/^mp3_dir/ c\mp3_dir	$FIREFLY_MP3_DIR" -i /var/mt-daapd.conf
+	sed -e "/^servername/ c\servername	$FIREFLY_SERVERNAME" -i /var/mt-daapd.conf
+      	sed -e "/^password/ c\password 	$FIREFLY_PASSWORD" -i /var/mt-daapd.conf
+	sed -e "/^rescan_interval/ c\rescan_interval	$FIREFLY_RESCAN_INTERVAL" -i /var/mt-daapd.conf
+	
+      	progress "starting firefly server"
+      	mt-daapd -c /var/log/mt-daapd.conf
+    fi
+  fi
+)&
