@@ -2,7 +2,7 @@
  * $Id: dynamic-art.c 386 2004-11-13 07:14:26Z rpedde $
  * Dynamically merge .jpeg data into an mp3 tag
  *
- * Copyright (C) 2004 Hiren Joshi (hirenj@mooh.org)
+#      Copyright (C) 2009-2011 Christian Müller (blacky.cm.77@googlemail.com)
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
