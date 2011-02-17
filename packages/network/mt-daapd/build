@@ -24,8 +24,6 @@
 
 cd $PKG_BUILD
 
-make
-
  ./configure --host=$TARGET_NAME \
             --build=$HOST_NAME \
             --prefix=/usr \
@@ -39,8 +37,9 @@ make
 	    --enable-mdns \
 	    --enable-oggvorbis \
 	    --with-gdbm-libs=$ROOT/$BUILD/gdbm-1.8.3/.libs \
-#	    --includedir=$ROOT/$BUILD/sqlite-autoconf-3070400 \
 	    ac_cv_func_setpgrp_void=yes 
+
+#	    --includedir=$ROOT/$BUILD/sqlite-autoconf-3070400 \
 
 make
 
