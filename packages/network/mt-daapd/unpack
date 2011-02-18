@@ -27,7 +27,4 @@ echo "### Applying project based patches ###"
 cp $PKG_DIR/src/xbmc_binding.c $PKG_BUILD/src/
 cp $PKG_DIR/src/xbmc_binding.h $PKG_BUILD/src/
 
-for patch in `ls $PKG_DIR/patches/$1`; do
-  cat $PKG_DIR/patches/$1 | patch -d \
-    `echo $PKG_BUILD | cut -f1 -d\ ` -p1
-done
+
