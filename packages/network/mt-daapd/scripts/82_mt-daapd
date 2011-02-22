@@ -40,7 +40,7 @@ OPENELEC_SETTINGS="$HOME/.xbmc/userdata/addon_data/os.openelec.settings/settings
       	wait_for_network
       	
 	#create temporary config file
-	cp /etc/mt-daapd/mt-daapd.conf /var/mt-daapd.conf
+	cp /etc/mt-daapd/mt-daapd.conf /var/tmp/mt-daapd.conf
 
     	#prep config file
       	sed -e "/^port/ c\port	$FIREFLY_PORT" -i /var/mt-daapd.conf
@@ -51,7 +51,7 @@ OPENELEC_SETTINGS="$HOME/.xbmc/userdata/addon_data/os.openelec.settings/settings
 	sed -e "/^rescan_interval/ c\rescan_interval	$FIREFLY_RESCAN_INTERVAL" -i /var/mt-daapd.conf
 	
       	progress "starting firefly server"
-      	mt-daapd -c /var/log/mt-daapd.conf
+      	mt-daapd -c /var/tmp/mt-daapd.conf
     fi
   fi
 )&

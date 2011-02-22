@@ -1,0 +1,291 @@
+diff -Nau -x Makefile mt-daapd-0.2.4.2/src//configfile.c mt-daapd-0.2.4.2/src//configfile.c
+--- mt-daapd-0.2.4.2/src//configfile.c	2008-04-19 21:17:23.000000000 +0200
++++ mt-daapd-0.2.4.2/src//configfile.c	2011-02-21 08:44:49.068530259 +0100
+@@ -131,6 +131,8 @@
+     { 0,0,0,CONFIG_TYPE_SPECIAL,"version",(void*)NULL,config_emit_version },
+     { 0,0,0,CONFIG_TYPE_SPECIAL,"system",(void*)NULL,config_emit_system },
+     { 1,0,0,CONFIG_TYPE_STRING,"art_filename",(void*)&config.artfilename,config_emit_string },
++    { 1,0,0,CONFIG_TYPE_STRING,"xbmc_album_art",(void*)&config.xbmc_album_art,config_emit_string },
++    { 1,0,0,CONFIG_TYPE_STRING,"xbmc_user_folder",(void*)&config.xbmc_user_folder,config_emit_string },
+     { 0,0,0,CONFIG_TYPE_SPECIAL,"flags",(void*)NULL,config_emit_flags },
+     { -1,1,0,CONFIG_TYPE_STRING,NULL,NULL,NULL }
+ };
+@@ -273,6 +275,8 @@
+     config.process_m3u=0;
+     config.scan_type=0;
+     config.compress=0;
++    config.xbmc_album_art=0;
++    config.xbmc_user_folder=NULL;
+ 
+     /* DWB: use alloced space so it can be freed without errors */
+     config.extensions=strdup(".mp3");
+diff -Nau -x Makefile mt-daapd-0.2.4.2/src//daapd.h mt-daapd-0.2.4.2/src//daapd.h
+--- mt-daapd-0.2.4.2/src//daapd.h	2008-04-19 21:17:23.000000000 +0200
++++ mt-daapd-0.2.4.2/src//daapd.h	2011-02-21 09:01:53.296530257 +0100
+@@ -67,6 +67,8 @@
+     char *extensions;     /**< What music file extentions to process */
+     char *artfilename;    /**< What filename to merge coverart with */
+     char *logfile;        /**< What file to use as a logfile */
++    char *xbmc_user_folder; /*Home foler*/
++    int xbmc_album_art;   /*enable xbmc_binding?*/
+     STATS stats;          /**< Stats structure (see above) */
+ } CONFIG;
+ 
+Gemeinsame Unterverzeichnisse: mt-daapd-0.2.4.2/src//.deps und mt-daapd-0.2.4.2/src//.deps.
+diff -Nau -x Makefile mt-daapd-0.2.4.2/src//main.c mt-daapd-0.2.4.2/src//main.c
+--- mt-daapd-0.2.4.2/src//main.c	2008-04-19 21:17:23.000000000 +0200
++++ mt-daapd-0.2.4.2/src//main.c	2011-02-21 08:46:56.464530258 +0100
+@@ -79,6 +79,7 @@
+ #include "webserver.h"
+ #include "playlist.h"
+ #include "dynamic-art.h"
++#include "xbmc_binding.h"
+ 
+ #ifndef WITHOUT_MDNS
+ #include "rend.h"
+@@ -399,9 +400,17 @@
+                 real_len=lseek(file_fd,0,SEEK_END);
+                 lseek(file_fd,0,SEEK_SET);
+ 
++		/*album art: first clear the file descriptor*/
++		img_fd=-1;
++
++		/*Then check for file in path if enabled*/
++		if ((config.artfilename) && ((img_fd=da_get_image_fd(pmp3->path)) != -1)){}
++		
++		/*that did not work, check xbmc_database*/
++		else if((config.xbmc_album_art) && ((img_fd=get_xbmc_image_fd(config.xbmc_user_folder,pmp3->fname)) != -1)){}  
++
+                 /* Re-adjust content length for cover art */
+-                if((config.artfilename) &&
+-                   ((img_fd=da_get_image_fd(pmp3->path)) != -1)) {
++                if (img_fd != -1) {
+                   fstat(img_fd, &sb);
+                   img_size = sb.st_size;
+ 
+@@ -449,9 +458,7 @@
+                 if(!offset)
+                     config.stats.songs_served++; /* FIXME: remove stat races */
+ 
+-                if((config.artfilename) &&
+-                   (!offset) &&
+-                   ((img_fd=da_get_image_fd(pmp3->path)) != -1)) {
++                if((!offset) && (img_fd!=-1)) {
+                     if (strncasecmp(pmp3->type,"mp3",4) ==0) {
+                         DPRINTF(E_INF,L_WS|L_ART,"Dynamic add artwork to %s (fd %d)\n",
+                                 pmp3->fname, img_fd);
+diff -Nau -x Makefile mt-daapd-0.2.4.2/src//Makefile.am mt-daapd-0.2.4.2/src//Makefile.am
+--- mt-daapd-0.2.4.2/src//Makefile.am	2008-04-19 21:17:23.000000000 +0200
++++ mt-daapd-0.2.4.2/src//Makefile.am	2011-02-19 10:26:14.257328256 +0100
+@@ -31,7 +31,7 @@
+ 	daap-proto.c daap-proto.h daap.c daap.h db-gdbm.c db-memory.h \
+ 	mp3-scanner.h mp3-scanner.c playlist.c playlist.h \
+ 	rend-unix.h lexer.l parser.y strcasestr.c strcasestr.h strsep.c \
+-	redblack.c redblack.h dynamic-art.c dynamic-art.h query.c query.h \
++	redblack.c redblack.h dynamic-art.c dynamic-art.h query.c query.h xbmc_binding.c xbmc_binding.h \
+ 	$(PRENDSRC) $(ORENDSRC) $(HRENDSRC) $(OGGVORBISSRC) $(ARENDSRC)
+ 
+ EXTRA_DIST = mDNS.c mDNSClientAPI.h mDNSDebug.h mDNSPosix.c \
+diff -Nau -x Makefile mt-daapd-0.2.4.2/src//Makefile.in mt-daapd-0.2.4.2/src//Makefile.in
+--- mt-daapd-0.2.4.2/src//Makefile.in	2008-04-19 22:17:14.000000000 +0200
++++ mt-daapd-0.2.4.2/src//Makefile.in	2011-02-19 12:01:53.473328256 +0100
+@@ -61,7 +61,7 @@
+ 	strcasestr.h strsep.c redblack.c redblack.h dynamic-art.c \
+ 	dynamic-art.h query.c query.h mDNS.c mDNSClientAPI.h \
+ 	mDNSDebug.h mDNSPosix.c mDNSUNP.c rend-posix.c \
+-	mDNSPlatformFunctions.h rend-unix.c rend-osx.c rend-howl.c \
++	mDNSPlatformFunctions.h rend-unix.c rend-osx.c rend-howl.c xbmc_binding.c xbmc_binding.h \
+ 	ogg.c rend-avahi.c
+ @COND_REND_POSIX_TRUE@am__objects_1 = mDNS.$(OBJEXT) \
+ @COND_REND_POSIX_TRUE@	mDNSPosix.$(OBJEXT) mDNSUNP.$(OBJEXT) \
+@@ -77,7 +77,7 @@
+ 	restart.$(OBJEXT) daap-proto.$(OBJEXT) daap.$(OBJEXT) \
+ 	db-gdbm.$(OBJEXT) mp3-scanner.$(OBJEXT) playlist.$(OBJEXT) \
+ 	lexer.$(OBJEXT) parser.$(OBJEXT) strcasestr.$(OBJEXT) \
+-	strsep.$(OBJEXT) redblack.$(OBJEXT) dynamic-art.$(OBJEXT) \
++	strsep.$(OBJEXT) redblack.$(OBJEXT) dynamic-art.$(OBJEXT) xbmc_binding.$(OBJEXT) \
+ 	query.$(OBJEXT) $(am__objects_1) $(am__objects_2) \
+ 	$(am__objects_3) $(am__objects_4) $(am__objects_5)
+ mt_daapd_OBJECTS = $(am_mt_daapd_OBJECTS)
+@@ -217,7 +217,7 @@
+ 	daap-proto.c daap-proto.h daap.c daap.h db-gdbm.c db-memory.h \
+ 	mp3-scanner.h mp3-scanner.c playlist.c playlist.h \
+ 	rend-unix.h lexer.l parser.y strcasestr.c strcasestr.h strsep.c \
+-	redblack.c redblack.h dynamic-art.c dynamic-art.h query.c query.h \
++	redblack.c redblack.h dynamic-art.c dynamic-art.h query.c query.h xbmc_binding.c xbmc_binding.h \
+ 	$(PRENDSRC) $(ORENDSRC) $(HRENDSRC) $(OGGVORBISSRC) $(ARENDSRC)
+ 
+ EXTRA_DIST = mDNS.c mDNSClientAPI.h mDNSDebug.h mDNSPosix.c \
+diff -Nau -x Makefile mt-daapd-0.2.4.2/src//xbmc_binding.c mt-daapd-0.2.4.2/src//xbmc_binding.c
+--- mt-daapd-0.2.4.2/src//xbmc_binding.c	1970-01-01 01:00:00.000000000 +0100
++++ mt-daapd-0.2.4.2/src//xbmc_binding.c	2011-02-21 09:36:24.592530259 +0100
+@@ -0,0 +1,138 @@
++/*
++ * $Id: dynamic-art.c 386 2004-11-13 07:14:26Z rpedde $
++ * Dynamically merge .jpeg data into an mp3 tag
++ *
++#      Copyright (C) 2009-2011 Christian Müller (blacky.cm.77@googlemail.com)
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License as published by
++ * the Free Software Foundation; either version 2 of the License, or
++ * (at your option) any later version.
++ *
++ * This program is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, write to the Free Software
++ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
++ */
++
++
++#include <errno.h>
++#include <fcntl.h>
++#include <limits.h>
++#include <stdio.h>
++#include <string.h>
++#include <stdlib.h>
++#include <unistd.h>
++#include <sqlite3.h>
++
++#include <sys/types.h>
++#include <sys/stat.h>
++
++#include "err.h"
++
++int get_xbmc_image_fd(char* user_folder, char * song_name) {
++	
++	sqlite3 *db=NULL;									//name of the database
++	char database_name[]="/.xbmc/userdata/Database/MyMusic7.db";				//name of the XMBC database relative to home folder
++	char* xbmc_music_database=(char*)malloc(sizeof(user_folder)+40);                            	//absolute path to the database
++
++	char* path;
++	const unsigned char * sql_answer;
++    	sqlite3_stmt * stmt;
++    	int fd,s,thumbid=1;
++
++	//first we need the absolute path to the database
++	strcpy(xbmc_music_database,user_folder);
++	strcat(xbmc_music_database,database_name);
++
++	//try to open database. We just need to read data
++        fd=sqlite3_open_v2(xbmc_music_database, &db,SQLITE_OPEN_READONLY,NULL);
++	free(xbmc_music_database);								//not needed anymore, so we can free the memory
++	
++	//if we did not sucseed in opening it, we are already finished
++	if(fd==0){
++		DPRINTF(E_LOG,L_ART,"Could not open database ! %s\n");
++		return -1;
++	}
++
++	//prepare the query
++	char* sql=(char*)malloc(sizeof(song_name)+60);
++    	sprintf(sql,"SELECT idThumb FROM song WHERE strFilename=\"%s\"",song_name);
++    	sqlite3_prepare_v2 (db, sql, strlen (sql) + 1, & stmt, NULL);
++
++	DPRINTF(E_INF,L_ART,"SQLITE CALL: %s\n",sql);
++
++	//go through the rows of the answer and write the result into thumbid
++	while (1) {
++		s = sqlite3_step (stmt);
++		if (s == SQLITE_ROW) {
++		    sql_answer  = sqlite3_column_text (stmt, 0);
++		    thumbid=atoi((char*)sql_answer);
++		    DPRINTF(E_INF,L_ART,"SQLITE answer %s\n",sql_answer);
++		}
++		else if (s == SQLITE_DONE) {
++		    break;
++		}
++		else {
++		    DPRINTF(E_LOG,L_ART,"SQLITE CALL failed %s",sql);
++		    return (-1);
++		}
++	}
++	
++	//this means there is no thumb available. Maybe next time?
++	if(thumbid==1){
++		DPRINTF(E_INF,L_ART,"No album art found %s\n");
++		free(sql);
++		sqlite3_close(db);
++		return -1;
++	}
++	
++	//we have the thumb, lets go for the picture
++	sprintf(sql,"SELECT strThumb FROM thumb where idThumb=\"%d\"",thumbid);
++        sqlite3_prepare_v2 (db, sql, strlen (sql) + 1, & stmt, NULL);
++
++        DPRINTF(E_INF,L_ART,"SQLITE CALL: %s\n",sql);
++	
++	//again go through the rows and write the anwser into path
++	while (1) {
++		s = sqlite3_step (stmt);
++		if (s == SQLITE_ROW) {
++		    sql_answer  = sqlite3_column_text (stmt, 0);
++		    path=(char*)malloc(sizeof((char*)sql_answer));
++		    strcpy(path,(char*)sql_answer);
++
++		    DPRINTF(E_INF,L_ART,"SQLITE answer%s\n",sql_answer);
++		}
++		else if (s == SQLITE_DONE) {
++		    break;
++		}
++		else {
++		    DPRINTF(E_LOG,L_ART,"failed\n");
++		    return (-1);
++		}
++	}
++	sqlite3_close(db);
++
++	//lets build the path to the thumb out of the information we have:
++        char* final_path=(char*)malloc(sizeof(path)+sizeof(user_folder));			//we need less memory since do not take all the path !
++	strcpy(final_path,user_folder);
++	strcat(final_path,".xbmc/userdata/");
++	strcat(final_path,path+23);
++
++	DPRINTF(E_INF,L_ART,"Thumb path: %s\n",final_path);
++    	
++	//finally, we should open the file to return the desired filedescriptor
++	fd = open(final_path,O_RDONLY);
++    	if(fd != -1) 
++		DPRINTF(E_LOG,L_ART,"Got image %s (fd %d)\n",final_path,fd);
++	free(final_path);
++	free(path);
++
++    return fd;
++}
++
++
+diff -Nau -x Makefile mt-daapd-0.2.4.2/src//xbmc_binding.h mt-daapd-0.2.4.2/src//xbmc_binding.h
+--- mt-daapd-0.2.4.2/src//xbmc_binding.h	1970-01-01 01:00:00.000000000 +0100
++++ mt-daapd-0.2.4.2/src//xbmc_binding.h	2011-02-21 08:09:12.324530259 +0100
+@@ -0,0 +1,27 @@
++/*
++ * Bind xmbc database to mt-daapd 
++ *
++#      Copyright (C) 2009-2011 Christian Müller (blacky.cm.77@googlemail.com)
++
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License as published by
++ * the Free Software Foundation; either version 2 of the License, or
++ * (at your option) any later version.
++ *
++ * This program is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, write to the Free Software
++ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
++ */
++
++#ifndef _XBMC_BINDING_H_
++#define _XMBC_BINDING_H_
++
++int get_xbmc_image_fd(char* user_folder, char * song_name);
++
++
++#endif
